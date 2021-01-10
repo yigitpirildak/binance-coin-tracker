@@ -15,5 +15,11 @@ class BinanceConnection:
         else:
             raise Exception("API index is out of range, API_LIST = " + str(self.API_LIST))
 
-    def get_all(self, timestamp, recvWindow=None):
-        return BinanceGetAll(self.API_LIST[self.api_index], self.api_key, self.secret_key, timestamp, recvWindow).send()
+    def get_all(self, timestamp, recv_window=None):
+        return BinanceGetAll(self.API_LIST[self.api_index], self.api_key, self.secret_key, timestamp, recv_window).send()
+
+    def get_future_account_transaction_history(self, asset, start_time, timestamp, end_time=None, current=None, size=None, recv_window=None):
+        return BinanceGetFutureAccountTransactionHistory(self.API_LIST[self.api_index], self.api_key, self.secret_key, asset, start_time, timestamp, end_time, current, size, recv_window).send()
+
+    def recent_trades_list(self, symbol, limit=None):
+        return BinanceRecentTradesList(self.API_LIST[self.api_index], self.api_key, symbol, limit).send()

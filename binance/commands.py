@@ -6,7 +6,12 @@ from enum import Enum
 
 
 class CallInfo(Enum):
-    GET_ALL = ["GET", "/sapi/v1/capital/config/getall"]
+    # USER_DATA (SIGNED)
+    GET_ALL = ["GET", "sapi/v1/capital/config/getall"]
+    GET_FUTURE_ACCOUNT_TRANSACTION_HISTORY_LIST = ["GET", "sapi/v1/futures/loan/repay/history"]
+
+    # NONE
+    RECENT_TRADES_LIST = ["GET", "api/v3/trades"]
 
 class BinanceApiCall(ABC):
 
@@ -19,13 +24,33 @@ class BinanceApiCall(ABC):
                                         headers={'X-MBX-APIKEY': api_key})
 
     def send(self):
-        self.send_prepared_request(self.request.prepare())
+        return self.send_prepared_request(self.request.prepare())
 
     def send_prepared_request(self, prepared_request):
+        print("Calling endpoint = {0}".format(prepared_request.url))
         with requests.Session() as session:
             return session.send(prepared_request).content
 
-class BinanceUserDataApiCall(BinanceApiCall, ABC):
+    def init_params(self, param_list, required, optional):
+        all_params = required + optional
+        parameter_map = {}
+        if len(all_params) != len(param_list):
+            raise Exception("Number of parameters do not match!")
+
+        i = 0
+        for required_parameter in required:
+            if param_list[i] is None:
+                raise Exception("{0} is a required parameter which cannot be None!".format(required[i]))
+            parameter_map[required_parameter] = param_list[i]
+            i = i + 1
+
+        for optional_parameter in optional:
+            parameter_map[optional_parameter] = param_list[i]
+            i = i + 1
+
+        return parameter_map
+
+class BinanceSignedApiCall(BinanceApiCall, ABC):
 
     def __init__(self, api, api_key, call_info, params, secret_key):
         super().__init__(api, api_key, call_info, params)
@@ -39,16 +64,35 @@ class BinanceUserDataApiCall(BinanceApiCall, ABC):
             total_params = query_string + total_params
         signature = hmac.new(bytes(self.secret_key, encoding='utf8'), bytes(total_params, encoding='utf8'), digestmod=hashlib.sha256)
         prepared_request.prepare_url(prepared_request.url, {"signature": signature.hexdigest()})
-        print(prepared_request.url)
         return self.send_prepared_request(prepared_request)
 
-class BinanceGetAll(BinanceUserDataApiCall):
+class BinanceGetAll(BinanceSignedApiCall):
 
-    def __init__(self, api, api_key, secret_key, timestamp, recvWindow=None):
-        self.__init_params(timestamp, recvWindow)
-        super().__init__(api, api_key, CallInfo.GET_ALL, self.params, secret_key)
+    REQUIRED_PARAMS = ["timestamp"]
+    OPTIONAL_PARAMS = ["recvWindow"]
 
-    def __init_params(self, timestamp, recvWindow):
-        self.params = {}
-        self.params["timestamp"] = timestamp
-        self.params["recvWindow"] = recvWindow
+    def __init__(self, api, api_key, secret_key, timestamp, recv_window=None):
+        params = self.init_params([timestamp, recv_window], self.REQUIRED_PARAMS, self.OPTIONAL_PARAMS)
+        super().__init__(api, api_key, CallInfo.GET_ALL, params, secret_key)
+
+class BinanceGetFutureAccountTransactionHistoryList(BinanceSignedApiCall):
+
+    REQUIRED_PARAMS = ["asset", "startTime", "timestamp"]
+    OPTIONAL_PARAMS = ["endTime", "current", "size", "recvWindow"]
+
+    def __init__(self, api, api_key, secret_key, asset, start_time, timestamp, end_time=None, current=None, size=None, recv_window=None):
+        params = self.init_params([asset, start_time, timestamp, end_time, current, size, recv_window], self.REQUIRED_PARAMS, self.OPTIONAL_PARAMS)
+        super().__init__(api, api_key, CallInfo.GET_FUTURE_ACCOUNT_TRANSACTION_HISTORY_LIST, params, secret_key)
+
+    def init_params(self, param_list, required, optional):
+        params = super().init_params(param_list, required, optional)
+        return params
+
+class BinanceRecentTradesList(BinanceApiCall):
+
+    REQUIRED_PARAMS = ["symbol"]
+    OPTIONAL_PARAMS = ["limit"]
+
+    def __init__(self, api, api_key, symbol, limit=None):
+        params = self.init_params([symbol, limit], self.REQUIRED_PARAMS, self.OPTIONAL_PARAMS)
+        super().__init__(api, api_key, CallInfo.RECENT_TRADES_LIST, params)
