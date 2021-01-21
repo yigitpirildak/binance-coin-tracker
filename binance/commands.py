@@ -9,6 +9,7 @@ class CallInfo(Enum):
     # USER_DATA (SIGNED)
     GET_ALL = ["GET", "sapi/v1/capital/config/getall"]
     GET_FUTURE_ACCOUNT_TRANSACTION_HISTORY_LIST = ["GET", "sapi/v1/futures/loan/repay/history"]
+    ALL_ORDERS = ["GET", "api/v3/allOrders"]
 
     # NONE
     RECENT_TRADES_LIST = ["GET", "api/v3/trades"]
@@ -84,9 +85,15 @@ class BinanceGetFutureAccountTransactionHistoryList(BinanceSignedApiCall):
         params = self.init_params([asset, start_time, timestamp, end_time, current, size, recv_window], self.REQUIRED_PARAMS, self.OPTIONAL_PARAMS)
         super().__init__(api, api_key, CallInfo.GET_FUTURE_ACCOUNT_TRANSACTION_HISTORY_LIST, params, secret_key)
 
-    def init_params(self, param_list, required, optional):
-        params = super().init_params(param_list, required, optional)
-        return params
+class BinanceAllOrders(BinanceSignedApiCall):
+
+    REQUIRED_PARAMS = ["symbol", "timestamp"]
+    OPTIONAL_PARAMS = ["orderId", "startTime", "endTime", "limit", "recvWindow"]
+
+    def __init__(self, api, api_key, secret_key, symbol, timestamp, orderId=None, startTime=None, endTime=None, limit=None, recvWindow=None):
+        params = self.init_params([symbol, timestamp, orderId, startTime, endTime, limit, recvWindow], self.REQUIRED_PARAMS, self.OPTIONAL_PARAMS)
+        super().__init__(api, api_key, CallInfo.ALL_ORDERS, params, secret_key)
+
 
 class BinanceRecentTradesList(BinanceApiCall):
 
