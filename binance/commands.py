@@ -13,6 +13,7 @@ class CallInfo(Enum):
 
     # NONE
     RECENT_TRADES_LIST = ["GET", "api/v3/trades"]
+    CURRENT_AVERAGE_PRICE = ["GET", "api/v3/avgPrice"]
 
 class BinanceApiCall(ABC):
 
@@ -103,3 +104,12 @@ class BinanceRecentTradesList(BinanceApiCall):
     def __init__(self, api, api_key, symbol, limit=None):
         params = self.init_params([symbol, limit], self.REQUIRED_PARAMS, self.OPTIONAL_PARAMS)
         super().__init__(api, api_key, CallInfo.RECENT_TRADES_LIST, params)
+
+class BinanceCurrentAveragePrice(BinanceApiCall):
+
+    REQUIRED_PARAMS = ["symbol"]
+    OPTIONAL_PARAMS = []
+
+    def __init__(self, api, api_key, symbol):
+        params = self.init_params([symbol], self.REQUIRED_PARAMS, self.OPTIONAL_PARAMS)
+        super().__init__(api, api_key, CallInfo.CURRENT_AVERAGE_PRICE, params)

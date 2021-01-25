@@ -1,10 +1,15 @@
-from binance.connection import BinanceConnection
 import time
 import calendar
+from binance.connection import BinanceConnection
+from binance.tracker import Tracker
 
 # Starter code
 if __name__ == "__main__":
     binance_connection = BinanceConnection("API_KEY", "API_SECRET")
-    timestamp_in_ms = str(calendar.timegm(time.gmtime()) * 1000)
-    get_all_response = binance_connection.get_all(timestamp_in_ms)
-    print(get_all_response)
+    coin_tracker = Tracker(binance_connection)
+    coin_tracker.add_symbol("EOSUSDT")  # TODO : Add a mode to grab available coins from wallet
+    coin_tracker.add_symbol("ADAUSDT")
+    coin_tracker.add_symbol("SUSHIUSDT")
+    coin_tracker.add_symbol("ETHUSDT")
+    coin_tracker.add_symbol("BCHUSDT")
+    coin_tracker.start()

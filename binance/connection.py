@@ -24,5 +24,8 @@ class BinanceConnection:
     def recent_trades_list(self, symbol, limit=None):
         return BinanceRecentTradesList(self.API_LIST[self.api_index], self.api_key, symbol, limit).send()
 
+    def current_average_price(self, symbol):
+        return BinanceCurrentAveragePrice(self.API_LIST[self.api_index], self.api_key, symbol).send()
+
     def all_orders(self, symbol, timestamp, orderId=None, startTime=None, endTime=None, limit=None, recvWindow=None):
         return BinanceAllOrders(self.API_LIST[self.api_index], self.api_key, self.secret_key, symbol, timestamp, orderId, startTime, endTime, limit, recvWindow).send()
